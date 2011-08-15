@@ -15,6 +15,7 @@
 #include "config.h"
 
 #define REQUEST_RETRIES 100
+#define MAX_RETRY_SLEEP 256
 
 static char storage_url[MAX_URL_SIZE];
 static char storage_token[MAX_HEADER_SIZE];
@@ -125,6 +126,7 @@ static int send_request(char *method, const char *path, FILE *fp, xmlParserCtxtP
 {
   long response = -1;
   int tries = 0;
+  int retrydelay = 0;
 
   // retry on failures
   for (tries = 0; tries < REQUEST_RETRIES; tries++)
@@ -177,7 +179,14 @@ static int send_request(char *method, const char *path, FILE *fp, xmlParserCtxtP
     return_connection(curl);
     if (response >= 200 && response < 400)
       return response;
-    sleep(8 << tries); // backoff
+
+    // set back off time
+    retrydelay = 1 << tries;
+    if (retrydelay > MAX_RETRY_SLEEP) {
+       retrydelay = MAX_RETRY_SLEEP;
+    }
+    sleep(retrydelay);
+
     if (response == 401 && !cloudfs_connect(0, 0, 0, 0)) // re-authenticate on 401s
       return response;
     if (xmlctx)
