@@ -14,7 +14,7 @@
 #include "cloudfsapi.h"
 #include "config.h"
 
-#define REQUEST_RETRIES 4
+#define REQUEST_RETRIES 100
 
 static char storage_url[MAX_URL_SIZE];
 static char storage_token[MAX_HEADER_SIZE];
